@@ -209,6 +209,72 @@ def _build_phase(raw: Optional[Dict[str, Any]], name: str) -> Optional[PhaseConf
     )
 
 
+def _deep_merge(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
+    """Recursively merge two dicts (lists and scalars in ``override`` win).
+
+    Used by the ``extends:`` inheritance mechanism so that child configs only
+    need to declare the fields that differ from their parent.
+    """
+    result = dict(base)
+    for key, value in override.items():
+        if (
+            key in result
+            and isinstance(result[key], dict)
+            and isinstance(value, dict)
+        ):
+            result[key] = _deep_merge(result[key], value)
+        else:
+            result[key] = value
+    return result
+
+
+def _load_raw_with_extends(
+    yaml_path: Path,
+    _seen: Optional[set[Path]] = None,
+) -> Dict[str, Any]:
+    """Read a YAML file and resolve its ``extends`` chain via deep merge.
+
+    ``extends`` may be a string (single parent) or a list of strings (merged
+    left-to-right; later parents win over earlier ones; the child wins over
+    all parents). Paths are resolved relative to the file declaring them.
+    """
+    yaml_path = yaml_path.resolve()
+    _seen = _seen or set()
+    if yaml_path in _seen:
+        raise ConfigValidationError(
+            f"Detected an extends cycle through {yaml_path}."
+        )
+    _seen = _seen | {yaml_path}
+
+    with yaml_path.open("r", encoding="utf-8") as fp:
+        raw = yaml.safe_load(fp) or {}
+
+    extends = raw.pop("extends", None)
+    if extends is None:
+        return raw
+
+    if isinstance(extends, str):
+        parents = [extends]
+    elif isinstance(extends, list):
+        parents = list(extends)
+    else:
+        raise ConfigValidationError(
+            f"'extends' must be a string or list of strings, got {type(extends).__name__} "
+            f"in {yaml_path}."
+        )
+
+    merged: Dict[str, Any] = {}
+    for parent_rel in parents:
+        parent_path = (yaml_path.parent / parent_rel).resolve()
+        if not parent_path.is_file():
+            raise ConfigValidationError(
+                f"extends target not found: {parent_path} (declared in {yaml_path})."
+            )
+        parent_raw = _load_raw_with_extends(parent_path, _seen=_seen)
+        merged = _deep_merge(merged, parent_raw)
+    return _deep_merge(merged, raw)
+
+
 def load_config(
     path: str | Path,
     overrides: Optional[Dict[str, Any]] = None,
@@ -216,7 +282,8 @@ def load_config(
     """Load a YAML config, apply CLI overrides, and validate.
 
     Args:
-        path: Path to the YAML config file.
+        path: Path to the YAML config file. May declare ``extends: <parent>``
+            (string or list) to inherit defaults from a base YAML.
         overrides: Optional flat dict of CLI overrides (``seed``, ``epochs``,
             ``batch_size``, ``learning_rate``, ``output_dir``).
 
@@ -231,8 +298,7 @@ def load_config(
     if not yaml_path.is_file():
         raise FileNotFoundError(f"Config file not found: {yaml_path}")
 
-    with yaml_path.open("r", encoding="utf-8") as fp:
-        raw = yaml.safe_load(fp) or {}
+    raw = _load_raw_with_extends(yaml_path)
 
     if overrides:
         _apply_overrides(raw, overrides)

@@ -1,3 +1,5 @@
+extends: base.yaml
+
 experiment:
   id: 4
   name: "config_4_sequential"
@@ -6,7 +8,6 @@ experiment:
 model:
   backbone: "microsoft/BiomedNLP-PubMedBERT-base-uncased-abstract-fulltext"
   num_labels: 9
-  max_length: 512
 
 data:
   label_space: "9tag"
@@ -36,14 +37,6 @@ data:
 
 training:
   strategy: "sequential"
-  batch_size: 16
-  gradient_accumulation_steps: 1
-  learning_rate: 2.0e-5
-  weight_decay: 0.01
-  warmup_ratio: 0.1
-  lr_scheduler_type: "linear"
-  fp16: true
-  gradient_checkpointing: false
   phase1:
     train_source: "bc5cdr_train_phase1"
     validation_source: "bc5cdr_validation"
@@ -57,20 +50,4 @@ training:
     load_from_phase1: true
 
 evaluation:
-  metrics: ["precision", "recall", "f1"]
-  per_entity: true
   test_sets_to_evaluate: ["test_bc5cdr", "test_pubmed"]
-
-output:
-  base_dir: "outputs"
-  save_total_limit: 2
-  logging_steps: 50
-  eval_steps: 0
-  save_strategy: "best"
-
-seed: 42
-
-runtime:
-  num_workers: 4
-  pin_memory: true
-  device: "auto"
