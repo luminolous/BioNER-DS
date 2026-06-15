@@ -220,3 +220,11 @@ __marimo__/
 # Dataset
 dataset/bc5cdr/bc5cdr_*.jsonl
 dataset/pubmed/pubmed_*.jsonl
+
+# Agents
+specs
+AGENT.md
+CLAUDE_CODE_PROMPT.md
+
+# Project outputs
+outputs/

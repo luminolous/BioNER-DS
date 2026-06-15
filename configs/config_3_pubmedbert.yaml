@@ -1,0 +1,58 @@
+experiment:
+  id: 3
+  name: "config_3_pubmedbert"
+  description: "PubMedBERT + BC5CDR. Best backbone baseline (Chemical + Disease only)."
+
+model:
+  backbone: "microsoft/BiomedNLP-PubMedBERT-base-uncased-abstract-fulltext"
+  num_labels: 5
+  max_length: 512
+
+data:
+  label_space: "5tag"
+  train_sources:
+    - name: "bc5cdr_train"
+      path: "dataset/bc5cdr/bc5cdr_train.jsonl"
+      label_field: "decoded_tags"
+      source_tag: "gold"
+  validation_source:
+    name: "bc5cdr_validation"
+    path: "dataset/bc5cdr/bc5cdr_validation.jsonl"
+    label_field: "decoded_tags"
+    source_tag: "gold"
+  test_sources:
+    - name: "test_bc5cdr"
+      path: "dataset/bc5cdr/bc5cdr_test.jsonl"
+      label_field: "decoded_tags"
+      source_tag: "gold"
+
+training:
+  strategy: "single"
+  epochs: 5
+  batch_size: 16
+  gradient_accumulation_steps: 1
+  learning_rate: 2.0e-5
+  weight_decay: 0.01
+  warmup_ratio: 0.1
+  lr_scheduler_type: "linear"
+  fp16: true
+  gradient_checkpointing: false
+
+evaluation:
+  metrics: ["precision", "recall", "f1"]
+  per_entity: true
+  test_sets_to_evaluate: ["test_bc5cdr"]
+
+output:
+  base_dir: "outputs"
+  save_total_limit: 2
+  logging_steps: 50
+  eval_steps: 0
+  save_strategy: "best"
+
+seed: 42
+
+runtime:
+  num_workers: 0
+  pin_memory: true
+  device: "auto"
