@@ -216,3 +216,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Dataset
+dataset/bc5cdr/bc5cdr_*.jsonl
+dataset/pubmed/pubmed_*.jsonl
