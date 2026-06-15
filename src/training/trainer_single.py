@@ -19,6 +19,7 @@ from src.models.ner_model import build_model_and_tokenizer
 from src.training.trainer_base import (
     build_run_dirs,
     build_training_arguments,
+    cleanup_intermediate_checkpoints,
     evaluate_on_test_sets,
     make_compute_metrics,
     save_best_model,
@@ -100,6 +101,7 @@ def train_single(
     )
     trainer.train()
     save_best_model(trainer, dirs["checkpoint"] / "best_model", tokenizer)
+    cleanup_intermediate_checkpoints(dirs["checkpoint"], keep={"best_model"})
 
     return evaluate_on_test_sets(
         trainer,
