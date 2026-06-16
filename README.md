@@ -21,7 +21,6 @@ BioNER-DS/
 │   ├── checkpoints/<config>/seed_<seed>/best_model/
 │   ├── logs/<config>/seed_<seed>.log
 │   └── results/<config>/seed_<seed>/eval_<test_set>.json
-├── scripts/                      # Bash launch + smoke-test entry points
 ├── src/                          # Library code (config, data, models, training, eval, inference)
 ├── train.py                      # Top-level training entry
 ├── evaluate.py                   # Standalone evaluation entry
@@ -61,7 +60,7 @@ PyTorch CUDA users should install the CUDA build manually first, then run the
 command above:
 
 ```bash
-pip install --index-url https://download.pytorch.org/whl/cu121 torch
+pip install --index-url https://download.pytorch.org/whl/cu128 torch
 pip install -r requirements.txt
 ```
 
@@ -107,13 +106,18 @@ CLI overrides that take precedence over YAML defaults:
 
 ## Running All Six Configs (Multi-Seed)
 
-Default seed list is `42,1337,2024` (3 seeds). Each `run_config_X.sh`
-trains every seed and then calls the aggregator.
+Use `notebooks/run_experiments.ipynb` — it loops over every config and seed
+in-kernel (see the "Notebook Entry Point" section below).
+
+For a headless / SSH workflow, loop through the configs from the shell:
 
 ```bash
-bash scripts/run_config_1.sh                  # uses default seeds
-bash scripts/run_config_4.sh "42,1337,2024"   # explicit seeds
-bash scripts/run_all.sh                       # all six configs back-to-back
+for cfg in configs/config_*.yaml; do
+    for seed in 42 1337 2024; do
+        python train.py --config "$cfg" --seed "$seed"
+    done
+    python -m src.utils.aggregate --config "$cfg"
+done
 ```
 
 After every run, evaluation JSONs land under
@@ -126,7 +130,6 @@ You can re-aggregate at any time:
 
 ```bash
 python -m src.utils.aggregate --config configs/config_3_pubmedbert.yaml
-bash scripts/aggregate_results.sh             # aggregate every config
 ```
 
 ## Standalone Evaluation
@@ -170,33 +173,38 @@ Output schema (one JSON object per line):
 
 `notebooks/run_experiments.ipynb` provides a one-click runner that:
 
-1. Checks GPU and key library versions.
-2. Installs `requirements.txt` (idempotent).
+1. Sets the working directory to the project root and checks GPU + library
+   versions.
+2. Optionally installs `requirements.txt`.
 3. Verifies dataset files.
-4. Lets you pick the seed list once.
-5. Launches each config sequentially via the bash scripts.
+4. Lets you pick the seed list and a `SMOKE_TEST` flag once.
+5. Calls the trainer functions directly (`train_single`, `train_sequential`,
+   `train_joint`) per config — no `bash`, no subprocess, no environment
+   crossing. The kernel's Python is used throughout.
 6. Renders every `aggregated_results.md` for quick comparison.
-7. Optionally runs inference on the PubMed test set.
+7. Optionally runs inference on the PubMed test set via `NERPredictor`.
 
-You can skip any cell without breaking the rest of the notebook.
+You can skip any cell without breaking the rest of the notebook. Pick a
+kernel that points at the venv where `requirements.txt` is installed.
+
+The same notebook is the recommended entry point on Vast.ai / SSH — open it
+through a remote Jupyter session and run the cells. For a non-interactive
+shell loop, use the `python train.py` snippet in the "Running All Six Configs"
+section above.
 
 ## Smoke Tests
 
-Phase-by-phase smoke entry points live under `scripts/`:
-
-```bash
-python scripts/smoke_phase1.py   # config + data loaders
-python scripts/smoke_phase3.py   # every YAML loads + dataset wiring
-python scripts/smoke_phase6.py   # multi-seed aggregator with synthetic seeds
-```
-
-For training plumbing:
+Use the `--smoke_test` flag to validate the training pipeline without paying
+the full epoch cost. The flag caps each dataset to 16 sentences and forces a
+single epoch.
 
 ```bash
 python train.py --config configs/config_3_pubmedbert.yaml --smoke_test --batch_size 4
 python train.py --config configs/config_4_sequential.yaml --smoke_test --batch_size 4
 python train.py --config configs/config_6_joint_noise_aware.yaml --smoke_test --batch_size 4
 ```
+
+The notebook exposes the same option via the `SMOKE_TEST` variable in cell 4.
 
 ## Reproducibility
 
