@@ -5,6 +5,11 @@
 
 set -euo pipefail
 
+# Always run from the project root regardless of caller's cwd.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$PROJECT_ROOT"
+
 CONFIG="configs/config_5_joint_uniform.yaml"
 SEEDS="${1:-42,1337,2024}"
 

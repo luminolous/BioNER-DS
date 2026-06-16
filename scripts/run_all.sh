@@ -5,6 +5,11 @@
 
 set -euo pipefail
 
+# Always run from the project root regardless of caller's cwd.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$PROJECT_ROOT"
+
 SEEDS="${1:-42,1337,2024}"
 
 for cfg in 1 2 3 4 5 6; do
