@@ -27,6 +27,12 @@ from src.config import load_config
 
 logger = logging.getLogger(__name__)
 
+# Entities with fewer than this many gold spans in the test set are flagged as
+# low-support in the Markdown table. JSON output keeps the raw numbers — only
+# the paper-facing table marks them N/A so reviewers do not chase a 0.000 F1
+# that comes from <10 gold entities.
+LOW_SUPPORT_THRESHOLD = 10
+
 
 def _compute_mean_std(values: List[float]) -> Dict[str, float]:
     """Return mean / std / raw list for a numeric column."""
@@ -160,19 +166,33 @@ def _format_markdown_table(aggregated: Dict[str, Any]) -> str:
             lines.append("")
             lines.append("| Entity | Precision | Recall | F1 | Support |")
             lines.append("|---|---|---|---|---|")
+            low_support_entities: List[str] = []
             for entity, metrics in payload["per_entity"].items():
                 support = metrics.get("support", {})
                 support_mean = support.get("mean", 0.0) if isinstance(support, dict) else 0.0
-                lines.append(
-                    "| {entity} | {p} | {r} | {f1} | {sup:.0f} |".format(
-                        entity=entity,
-                        p=_format_metric(metrics["precision"]),
-                        r=_format_metric(metrics["recall"]),
-                        f1=_format_metric(metrics["f1"]),
-                        sup=support_mean,
+                if support_mean < LOW_SUPPORT_THRESHOLD:
+                    lines.append(
+                        f"| {entity} | N/A | N/A | N/A | {support_mean:.0f} |"
                     )
-                )
+                    low_support_entities.append(entity)
+                else:
+                    lines.append(
+                        "| {entity} | {p} | {r} | {f1} | {sup:.0f} |".format(
+                            entity=entity,
+                            p=_format_metric(metrics["precision"]),
+                            r=_format_metric(metrics["recall"]),
+                            f1=_format_metric(metrics["f1"]),
+                            sup=support_mean,
+                        )
+                    )
             lines.append("")
+            if low_support_entities:
+                lines.append(
+                    f"_Entities marked N/A have fewer than {LOW_SUPPORT_THRESHOLD} "
+                    f"gold spans in this test set ({', '.join(low_support_entities)}); "
+                    f"the raw numbers remain available in `aggregated_results.json`._"
+                )
+                lines.append("")
 
     return "\n".join(lines).rstrip() + "\n"
 

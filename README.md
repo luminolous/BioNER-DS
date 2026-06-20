@@ -43,6 +43,21 @@ Configs 1–3 train on BC5CDR gold labels only. Configs 4–6 add the silver
 PubMed corpus through different mixing strategies (sequential, joint
 uniform-weight, joint noise-aware-weight).
 
+### Expected behaviours that look like bugs but aren't
+
+- **Config 4 (sequential) reports near-zero BC5CDR F1 on Chemical/Disease**
+  after phase 2. This is **catastrophic forgetting** — phase 2 trains on the
+  silver corpus where Virus/Gene dominate, and the model erases its
+  phase-1 Chemical/Disease knowledge. The pipeline explicitly logs the
+  per-entity forgetting score (`Δ F1`) for the paper. Use config 5 (joint
+  uniform) as the contrast that preserves both schemas. Do not "fix"
+  config 4 — the gap *is* the experimental finding.
+- **Chemical/Disease F1 = 0 on `test_pubmed`.** The PubMed gold test only
+  contains 4 Chemical and 0 Disease spans (it was annotated for Virus/Gene
+  evaluation). Entities with support below `LOW_SUPPORT_THRESHOLD = 10` are
+  marked **N/A** in `aggregated_results.md`; the raw numbers remain in the
+  JSON. Always report Chemical/Disease from `test_bc5cdr`, not `test_pubmed`.
+
 ## Requirements
 
 * Python 3.10–3.14

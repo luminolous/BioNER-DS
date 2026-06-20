@@ -3,7 +3,7 @@ extends: base.yaml
 experiment:
   id: 6
   name: "config_6_joint_noise_aware"
-  description: "PubMedBERT + joint training with noise-aware sample weighting (gold=1.0, silver=0.3)."
+  description: "PubMedBERT + joint training with noise-aware sample weighting (gold=1.0, silver=0.5)."
 
 model:
   backbone: "microsoft/BiomedNLP-PubMedBERT-base-uncased-abstract-fulltext"
@@ -39,7 +39,7 @@ training:
   strategy: "joint_noise_aware"
   source_weights:
     gold: 1.0
-    silver: 0.3
+    silver: 0.5
 
 evaluation:
   test_sets_to_evaluate: ["test_bc5cdr", "test_pubmed"]

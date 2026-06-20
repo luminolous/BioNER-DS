@@ -3,10 +3,50 @@
 from __future__ import annotations
 
 import logging
+import os
 import sys
+import warnings
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
+
+
+def _silence_known_warnings() -> None:
+    """Filter advisory warnings that clutter run output without being actionable.
+
+    Each suppressed warning is intentionally narrow so unexpected variants of
+    the same library still surface. Revisit when the upstream APIs change.
+    """
+    # HuggingFace Hub spams a one-time symlink advisory on Windows; harmless.
+    os.environ.setdefault("HF_HUB_DISABLE_SYMLINKS_WARNING", "1")
+
+    # `transformers.Trainer(tokenizer=...)` is deprecated in favor of
+    # `processing_class=`. We will migrate when HF 5.0 is the stable line; until
+    # then the warning fires every Trainer construction.
+    warnings.filterwarnings(
+        "ignore",
+        category=FutureWarning,
+        message=r".*tokenizer.*deprecated.*",
+    )
+
+    # Xet storage backend advisory from huggingface_hub; falls back to HTTP.
+    warnings.filterwarnings(
+        "ignore",
+        category=UserWarning,
+        message=r".*Xet Storage.*",
+    )
+    warnings.filterwarnings(
+        "ignore",
+        category=UserWarning,
+        message=r".*hf_xet.*",
+    )
+
+    # Lingering symlink advisory for older huggingface_hub on Windows.
+    warnings.filterwarnings(
+        "ignore",
+        category=UserWarning,
+        message=r".*cache-system uses symlinks.*",
+    )
 
 
 def configure_logging(
@@ -24,6 +64,8 @@ def configure_logging(
     Returns:
         Path to the log file that was created.
     """
+    _silence_known_warnings()
+
     log_dir = Path(output_dir)
     log_dir.mkdir(parents=True, exist_ok=True)
 
