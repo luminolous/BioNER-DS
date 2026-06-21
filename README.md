@@ -9,8 +9,6 @@
 [![seqeval](https://img.shields.io/badge/seqeval-1.2%2B-4C1?logo=python&logoColor=white)](https://github.com/chakki-works/seqeval)
 [![CUDA](https://img.shields.io/badge/CUDA-13.0-76B900?logo=nvidia&logoColor=white)](https://developer.nvidia.com/cuda-toolkit)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Dataset on HF](https://img.shields.io/badge/Dataset-HuggingFace-FFD21E?logo=huggingface&logoColor=black)](https://huggingface.co/datasets/lumicero/BioNER-DS)
-[![Models on HF](https://img.shields.io/badge/Checkpoints-HuggingFace-FFD21E?logo=huggingface&logoColor=black)](https://huggingface.co/lumicero/BioNER-DS)
 
 BC5CDR ships with two entity types: Chemical and Disease. For virus-centric drug repurposing the model also needs Virus and Gene. This project expands the entity schema by attaching distant-supervision silver labels to a scraped PubMed corpus, then compares several ways of mixing the original gold data with the noisier silver data so that a single biomedical NER model recognises all four entity types at once.
 
