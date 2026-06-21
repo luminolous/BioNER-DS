@@ -6,7 +6,6 @@
 [![Python](https://img.shields.io/badge/Python-3.12%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org/)
 [![Transformers](https://img.shields.io/badge/Transformers-4.40%2B-FFD21E?logo=huggingface&logoColor=black)](https://github.com/huggingface/transformers)
-[![seqeval](https://img.shields.io/badge/seqeval-1.2%2B-4C1?logo=python&logoColor=white)](https://github.com/chakki-works/seqeval)
 [![CUDA](https://img.shields.io/badge/CUDA-13.0-76B900?logo=nvidia&logoColor=white)](https://developer.nvidia.com/cuda-toolkit)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
