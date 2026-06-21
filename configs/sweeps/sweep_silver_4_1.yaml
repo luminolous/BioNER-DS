@@ -1,0 +1,32 @@
+extends: ../config_5_joint_uniform.yaml
+
+experiment:
+  id: 5
+  name: "sweep_silver_4_1"
+  description: "Silver subsample ratio 4:1 (20,476 silver sentences)."
+
+data:
+  label_space: "9tag"
+  train_sources:
+    - name: "bc5cdr_train"
+      path: "dataset/bc5cdr/bc5cdr_train.jsonl"
+      label_field: "decoded_tags_pseudo_final"
+      source_tag: "gold"
+    - name: "pubmed_silver"
+      path: "dataset/pubmed/pubmed_scrapping_4to1.jsonl"
+      label_field: "decoded_tags_pseudo_final"
+      source_tag: "silver"
+  validation_source:
+    name: "bc5cdr_validation"
+    path: "dataset/bc5cdr/bc5cdr_validation.jsonl"
+    label_field: "decoded_tags_pseudo_final"
+    source_tag: "gold"
+  test_sources:
+    - name: "test_bc5cdr"
+      path: "dataset/bc5cdr/bc5cdr_test.jsonl"
+      label_field: "decoded_tags"
+      source_tag: "gold"
+    - name: "test_pubmed"
+      path: "dataset/pubmed/pubmed_test.jsonl"
+      label_field: "decoded_tags_pseudo_final"
+      source_tag: "gold"
